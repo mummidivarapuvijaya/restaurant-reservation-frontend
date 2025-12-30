@@ -17,7 +17,7 @@ export default function UserDashboard() {
   };
 
   const loadReservations = async () => {
-    const res = await api.get("/api/reservations/my");
+    const res = await api.get("/reservations/my");
     setReservations(res.data);
   };
 
@@ -32,9 +32,9 @@ export default function UserDashboard() {
   const bookReservation = async (e) => {
     e.preventDefault();
     try {
-      await api.post("/api/reservations", form);
+      await api.post("/reservations", form);
       toast.success("Reservation booked successfully");
-      
+
       setForm({
         date: "",
         timeSlot: "",
@@ -48,7 +48,7 @@ export default function UserDashboard() {
   };
 
   const cancelReservation = async (id) => {
-    await api.delete(`/api/reservations/${id}`);
+    await api.delete(`/reservations/${id}`);
     toast.info("Reservation cancelled");
     loadReservations();
   };

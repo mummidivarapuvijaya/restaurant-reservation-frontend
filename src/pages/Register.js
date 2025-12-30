@@ -19,7 +19,7 @@ export default function Register() {
   const register = async (e) => {
   e.preventDefault();
   try {
-    await api.post("/api/auth/register", form);
+    await api.post("/auth/register", form);
     toast.success("Registration successful. Please login.");
     navigate("/login");
   } catch (err) {
