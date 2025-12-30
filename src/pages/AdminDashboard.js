@@ -16,7 +16,7 @@ export default function AdminDashboard() {
 
   // Load all reservations
   const loadReservations = async () => {
-    const res = await api.get("/reservations/all");
+    const res = await api.get("/api/reservations/all");
     setReservations(res.data);
   };
 
@@ -27,7 +27,7 @@ export default function AdminDashboard() {
   // Filter by date
   const filterByDate = async () => {
     if (!date) return;
-    const res = await api.get(`/reservations/by-date?date=${date}`);
+    const res = await api.get(`/api/reservations/by-date?date=${date}`);
     setReservations(res.data);
   };
 
@@ -48,7 +48,7 @@ export default function AdminDashboard() {
 
   // Save update
 const saveUpdate = async (id) => {
-  await api.put(`/reservations/admin/${id}`, editData);
+  await api.put(`/api/reservations/admin/${id}`, editData);
   toast.success("Reservation updated");
   setEditingId(null);
   loadReservations();
@@ -56,7 +56,7 @@ const saveUpdate = async (id) => {
 
   // Cancel reservation
  const cancelReservation = async (id) => {
-  await api.delete(`/reservations/admin/${id}`);
+  await api.delete(`/api/reservations/admin/${id}`);
   toast.info("Reservation cancelled");
   loadReservations();
 };

@@ -17,7 +17,7 @@ export default function UserDashboard() {
   };
 
   const loadReservations = async () => {
-    const res = await api.get("/reservations/my");
+    const res = await api.get("/api/reservations/my");
     setReservations(res.data);
   };
 
@@ -25,88 +25,106 @@ export default function UserDashboard() {
     loadReservations();
   }, []);
 
-  const handleChange = (e) =>
+  const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
   const bookReservation = async (e) => {
-  e.preventDefault();
-  try {
-    await api.post("/reservations", form);
-    toast.success("Reservation booked successfully");
+    e.preventDefault();
+    try {
+      await api.post("/api/reservations", form);
+      toast.success("Reservation booked successfully");
+      
+      setForm({
+        date: "",
+        timeSlot: "",
+        guests: 1
+      });
+
+      loadReservations();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Booking failed");
+    }
+  };
+
+  const cancelReservation = async (id) => {
+    await api.delete(`/api/reservations/${id}`);
+    toast.info("Reservation cancelled");
     loadReservations();
-  } catch (err) {
-    toast.error(err.response?.data?.message || "Booking failed");
-  }
-};
-
-const cancelReservation = async (id) => {
-  await api.delete(`/reservations/${id}`);
-  toast.info("Reservation cancelled");
-  loadReservations();
-};
-
+  };
 
   return (
     <>
-    <Header />
-    <div className="container">
-      <div className="header">
-        <h2>User Dashboard</h2>
-        <button onClick={logout}>Logout</button>
-      </div>
+      <Header />
+      <div className="container">
+        <div className="header">
+          <h2>User Dashboard</h2>
+          <button onClick={logout}>Logout</button>
+        </div>
 
-      <h3>Book a Reservation</h3>
-      <form onSubmit={bookReservation}>
-        <input type="date" name="date" onChange={handleChange} required />
-        <input
-          type="text"
-          name="timeSlot"
-          placeholder="7PM - 9PM"
-          onChange={handleChange}
-          required
-        />
-        <input
-          type="number"
-          name="guests"
-          min="1"
-          onChange={handleChange}
-          required
-        />
-        <button type="submit">Book</button>
-      </form>
+        <h3>Book a Reservation</h3>
+        <form onSubmit={bookReservation}>
+          <input
+            type="date"
+            name="date"
+            value={form.date}
+            onChange={handleChange}
+            required
+          />
 
-      <h3>My Reservations</h3>
-      {reservations.length === 0 ? (
-        <div className="empty">No reservations yet</div>
-      ) : (
-        <table>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Time Slot</th>
-              <th>Guests</th>
-              <th>Table</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {reservations.map((r) => (
-              <tr key={r._id}>
-                <td>{r.date}</td>
-                <td>{r.timeSlot}</td>
-                <td>{r.guests}</td>
-                <td>{r.table?.tableNumber}</td>
-                <td>
-                  <button onClick={() => cancelReservation(r._id)}>
-                    Cancel
-                  </button>
-                </td>
+          <input
+            type="text"
+            name="timeSlot"
+            placeholder="7PM - 9PM"
+            value={form.timeSlot}
+            onChange={handleChange}
+            required
+          />
+
+          <input
+            type="number"
+            name="guests"
+            min="1"
+            value={form.guests}
+            onChange={handleChange}
+            required
+          />
+
+          <button type="submit">Book</button>
+        </form>
+
+        <h3>My Reservations</h3>
+        {reservations.length === 0 ? (
+          <div className="empty">No reservations yet</div>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Time Slot</th>
+                <th>Guests</th>
+                <th>Table</th>
+                <th>Action</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-    </div>
+            </thead>
+            <tbody>
+              {reservations.map((r) => (
+                <tr key={r._id}>
+                  <td>{r.date}</td>
+                  <td>{r.timeSlot}</td>
+                  <td>{r.guests}</td>
+                  <td>{r.table?.tableNumber}</td>
+                  <td>
+                    <button onClick={() => cancelReservation(r._id)}>
+                      Cancel
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
     </>
   );
 }
