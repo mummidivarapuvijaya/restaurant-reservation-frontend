@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://restaurant-reservation-backend-ej1o.onrender.com/api"
+  baseURL: "https://restaurant-reservation-backend-1-agd2.onrender.com/api"
 });
 
 api.interceptors.request.use(
