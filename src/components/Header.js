@@ -1,21 +1,15 @@
- export default function Header() {
+import { Navbar, Container } from "react-bootstrap";
+import "./Header.css";
+
+export default function Header() {
   return (
-    <div style={styles.header}>
-      <h1 style={styles.title}>
-        Restaurant Reservation Management System
-      </h1>
-    </div>
+    <Navbar expand="lg" className="custom-navbar shadow-lg">
+      <Container fluid>
+        <Navbar.Brand className="mx-auto brand-text">
+          <span className="brand-icon">🍽️</span>
+          <span className="brand-title">Restaurant Reservation Management System</span>
+        </Navbar.Brand>
+      </Container>
+    </Navbar>
   );
 }
-
-const styles = {
-  header: {
-    backgroundColor: "#7e889dff",
-    padding: "15px 0",
-    textAlign: "center"
-  },
-  title: {
-    color: "white",
-    margin: 0
-  }
-};

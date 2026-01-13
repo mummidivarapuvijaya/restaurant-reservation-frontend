@@ -1,0 +1,132 @@
+.login-page {
+  background-image: url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.login-page::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.75) 0%, rgba(236, 72, 153, 0.75) 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.carousel-container {
+  height: 500px;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  border: 3px solid rgba(255, 255, 255, 0.2);
+}
+
+.carousel-slide {
+  height: 500px;
+  background-image: url('https://images.unsplash.com/photo-1414235077428-338989a2e8c0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.carousel-slide::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.85) 0%, rgba(236, 72, 153, 0.85) 100%);
+  backdrop-filter: blur(2px);
+  z-index: 0;
+}
+
+.carousel-content {
+  position: relative;
+  z-index: 2;
+  padding: 2rem;
+}
+
+.food-icon {
+  font-size: 5rem;
+  animation: float 3s ease-in-out infinite;
+  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.3));
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+.login-card {
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.login-card h2 {
+  background: linear-gradient(135deg, #1E293B 0%, #475569 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.login-card .form-control-lg {
+  border-radius: 12px;
+  border: 2px solid #e8e8e8;
+  transition: all 0.3s;
+  padding: 14px 18px;
+  font-size: 1rem;
+}
+
+.login-card .form-control-lg:focus {
+  border-color: #1E293B;
+  box-shadow: 0 0 0 0.25rem rgba(30, 41, 59, 0.25);
+  transform: translateY(-2px);
+}
+
+.login-card .form-label {
+  font-weight: 600;
+  color: #4B5563;
+  margin-bottom: 8px;
+}
+
+.login-card .btn-primary {
+  background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
+  border: none;
+  border-radius: 12px;
+  padding: 14px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  transition: all 0.3s;
+  box-shadow: 0 4px 15px rgba(30, 41, 59, 0.4);
+}
+
+.login-card .btn-primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(30, 41, 59, 0.5);
+  background: linear-gradient(135deg, #334155 0%, #1E293B 100%);
+}
+
+.login-card .btn-primary:active {
+  transform: translateY(-1px);
+}
+
+.login-card a {
+  color: #1E293B;
+  font-weight: 600;
+  transition: color 0.3s;
+}
+
+.login-card a:hover {
+  color: #475569;
+}

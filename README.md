@@ -1,17 +1,22 @@
-# 🍽️ Restaurant Reservation Management System – Frontend
+# 🍽️ Restaurant Reservation Management System
 
-This is the **frontend application** for the Restaurant Reservation Management System, built using **React**.  
-It provides role-based user interfaces for **Customers (Users)** and **Administrators (Admins)** to manage restaurant reservations.
+A full-stack web application for managing restaurant table reservations with role-based access control for customers and administrators.
 
 ---
 
 ## 🚀 Tech Stack
 
-- React (Create React App)
-- React Router DOM
-- Axios
-- React Toastify
-- CSS
+### Frontend
+- **React** (Create React App)
+- **React Router DOM** - Client-side routing
+- **React Bootstrap** - UI components and styling
+- **Axios** - HTTP client for API calls
+- **React Toastify** - User notifications
+
+### Backend (Deployed Separately)
+- **Node.js** with **Express**
+- **MongoDB** - Database
+- **JWT** - Authentication and authorization
 
 ---
 
@@ -37,14 +42,44 @@ It provides role-based user interfaces for **Customers (Users)** and **Administr
 
 - View all reservations
 - Filter reservations by date
-- Update reservation details
+  - Update any reservation (date, time slot)
 - Cancel any reservation
+  - Full system visibility
+- **Restrictions**: None (full system access)
 
----
+### Implementation Details
 
-## 🔔 Notifications
+1. **JWT Token Authentication**:
+   - Token stored in `localStorage` after successful login
+   - Token includes user role information
+   - Token is sent with every API request via Axios interceptor
 
-Uses **react-toastify** for non-blocking alerts.
+2. **Frontend Route Protection**:
+   - `ProtectedRoute`: Checks for valid token (any authenticated user)
+   - `AdminRoute`: Checks for ADMIN role specifically
+   - Unauthorized users are redirected to login page
+
+3. **Backend Authorization**:
+   - API endpoints validate JWT token
+   - Role-based middleware checks user permissions
+   - Admin-only endpoints verify ADMIN role
+
+4. **API Endpoints by Role**:
+
+   **Customer Endpoints:**
+   - `POST /api/auth/register` - Register new user
+   - `POST /api/auth/login` - Login
+   - `POST /api/reservations` - Create reservation
+   - `GET /api/reservations/my` - Get own reservations
+   - `DELETE /api/reservations/:id` - Cancel own reservation
+
+   **Admin Endpoints:**
+   - All customer endpoints
+   - `GET /api/reservations/all` - Get all reservations
+   - `GET /api/reservations/by-date?date=YYYY-MM-DD` - Filter by date
+   - `PUT /api/reservations/admin/:id` - Update any reservation
+   - `DELETE /api/reservations/admin/:id` - Cancel any reservation
+
 
 ---
 
