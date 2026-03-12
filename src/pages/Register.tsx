@@ -1,31 +1,34 @@
-import { useState } from "react";
-import api from "../api/axios";
 import { useNavigate, Link } from "react-router-dom";
 import Header from "../components/Header";
-import { toast } from "react-toastify";
 import { Container, Card, Form, Button } from "react-bootstrap";
 import "./Register.css";
+import { useRegister } from "../api/queries";
+import { registerSchema, RegisterForm } from "../schemas";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 
 export default function Register() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    password: ""
+  const registerMutation = useRegister();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<RegisterForm>({
+    resolver: zodResolver(registerSchema),
   });
 
-  const handleChange = (e) =>
-    setForm({ ...form, [e.target.name]: e.target.value });
-
-  const register = async (e) => {
-    e.preventDefault();
-    try {
-      await api.post("/auth/register", form);
-      toast.success("Registration successful. Please login.");
-      navigate("/login");
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Registration failed");
-    }
+  const onSubmit = async (data: RegisterForm) => {
+    registerMutation.mutate(data, {
+      onSuccess: (response) => {
+        if (response.role === "ADMIN") {
+          navigate("/admin");
+        } else {
+          navigate("/user");
+        }
+      },
+    });
   };
 
   return (
@@ -37,50 +40,60 @@ export default function Register() {
             <Card className="shadow-lg border-0 register-card">
               <Card.Body className="p-4">
                 <h2 className="text-center mb-4 fw-bold">Register</h2>
-                <Form onSubmit={register}>
+                <Form onSubmit={handleSubmit(onSubmit)}>
                   <Form.Group className="mb-3">
                     <Form.Label>Name</Form.Label>
                     <Form.Control
                       type="text"
-                      name="name"
+                      {...register("name")}
                       placeholder="Enter your name"
-                      value={form.name}
-                      onChange={handleChange}
-                      required
                       className="form-control-lg"
+                      isInvalid={!!errors.name}
                     />
+                    {errors.name && (
+                      <Form.Control.Feedback type="invalid">
+                        {errors.name.message}
+                      </Form.Control.Feedback>
+                    )}
                   </Form.Group>
                   <Form.Group className="mb-3">
                     <Form.Label>Email</Form.Label>
                     <Form.Control
                       type="email"
-                      name="email"
+                      {...register("email")}
                       placeholder="Enter your email"
-                      value={form.email}
-                      onChange={handleChange}
-                      required
                       className="form-control-lg"
+                      isInvalid={!!errors.email}
                     />
+                    {errors.email && (
+                      <Form.Control.Feedback type="invalid">
+                        {errors.email.message}
+                      </Form.Control.Feedback>
+                    )}
                   </Form.Group>
                   <Form.Group className="mb-3">
                     <Form.Label>Password</Form.Label>
                     <Form.Control
                       type="password"
-                      name="password"
+                      {...register("password")}
                       placeholder="Enter your password"
-                      value={form.password}
-                      onChange={handleChange}
-                      required
                       className="form-control-lg"
+                      isInvalid={!!errors.password}
                     />
+                    {errors.password && (
+                      <Form.Control.Feedback type="invalid">
+                        {errors.password.message}
+                      </Form.Control.Feedback>
+                    )}
                   </Form.Group>
                   <Button
                     type="submit"
                     variant="primary"
                     size="lg"
                     className="w-100 mb-3"
+                    disabled={registerMutation.isPending}
                   >
-                    Register
+                    {registerMutation.isPending ? "Registering..." : "Register"}
                   </Button>
                   <p className="text-center mt-3">
                     Already have account?{" "}

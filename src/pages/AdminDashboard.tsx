@@ -1,85 +1,73 @@
-import { useEffect, useState } from "react";
-import api from "../api/axios";
+import { useState } from "react";
 import Header from "../components/Header";
-import { toast } from "react-toastify";
 import { Container, Card, Form, Button, Table, Carousel } from "react-bootstrap";
 import "./AdminDashboard.css";
+import { 
+  useAllReservations, 
+  useReservationsByDate, 
+  useUpdateReservation, 
+  useCancelReservationAdmin 
+} from "../api/queries";
+import { reservationUpdateSchema, ReservationUpdate } from "../schemas";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { Reservation } from "../schemas";
 
 export default function AdminDashboard() {
-  const [reservations, setReservations] = useState([]);
-  const [date, setDate] = useState("");
+  const [filterDate, setFilterDate] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  
+  const { data: allReservations = [], isLoading: isLoadingAll } = useAllReservations();
+  const { data: filteredReservations = [], isLoading: isLoadingFiltered } = useReservationsByDate(filterDate);
+  
+  const updateReservation = useUpdateReservation();
+  const cancelReservation = useCancelReservationAdmin();
 
-  // Edit state
-  const [editingId, setEditingId] = useState(null);
-  const [editData, setEditData] = useState({
-    date: "",
-    timeSlot: ""
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<ReservationUpdate>({
+    resolver: zodResolver(reservationUpdateSchema),
   });
 
-  // Load all reservations
-  const loadReservations = async () => {
-    try {
-      const res = await api.get("/reservations/all");
-      setReservations(res.data);
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to load reservations");
-    }
+  const reservations = filterDate ? filteredReservations : allReservations;
+  const isLoading = filterDate ? isLoadingFiltered : isLoadingAll;
+
+  const filterByDate = () => {
+    // Query will run automatically when filterDate changes
   };
 
-  useEffect(() => {
-    loadReservations();
-  }, []);
-
-  // Filter by date
-  const filterByDate = async () => {
-    if (!date) return;
-    try {
-      const res = await api.get(`/reservations/by-date?date=${date}`);
-      setReservations(res.data);
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to filter reservations");
-    }
-  };
-
-  // Reset filter
   const resetFilter = () => {
-    setDate("");
-    loadReservations();
+    setFilterDate("");
   };
 
-  // Start editing
-  const startEdit = (reservation) => {
+  const startEdit = (reservation: Reservation) => {
     setEditingId(reservation._id);
-    setEditData({
+    reset({
       date: reservation.date,
-      timeSlot: reservation.timeSlot
+      timeSlot: reservation.timeSlot,
     });
   };
 
-  // Save update
-  const saveUpdate = async (id) => {
-    try {
-      await api.put(`/reservations/admin/${id}`, editData);
-      toast.success("Reservation updated");
-      setEditingId(null);
-      loadReservations();
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to update reservation");
-    }
+  const saveUpdate = (id: string) => {
+    handleSubmit((data) => {
+      updateReservation.mutate(
+        { id, data },
+        {
+          onSuccess: () => {
+            setEditingId(null);
+          },
+        }
+      );
+    })();
   };
 
-  // Cancel reservation
-  const cancelReservation = async (id) => {
-    try {
-      await api.delete(`/reservations/admin/${id}`);
-      toast.info("Reservation cancelled");
-      loadReservations();
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to cancel reservation");
-    }
+  const handleCancel = (id: string) => {
+    cancelReservation.mutate(id);
   };
 
-  // Logout
   const logout = () => {
     localStorage.clear();
     window.location.href = "/login";
@@ -136,8 +124,8 @@ export default function AdminDashboard() {
                     <Form.Label>Filter by Date</Form.Label>
                     <Form.Control
                       type="date"
-                      value={date}
-                      onChange={(e) => setDate(e.target.value)}
+                      value={filterDate}
+                      onChange={(e) => setFilterDate(e.target.value)}
                       className="form-control-lg"
                     />
                   </div>
@@ -146,7 +134,7 @@ export default function AdminDashboard() {
                       variant="primary"
                       size="lg"
                       onClick={filterByDate}
-                      disabled={!date}
+                      disabled={!filterDate}
                       className="w-100 filter-btn"
                     >
                       Filter by Date
@@ -173,7 +161,11 @@ export default function AdminDashboard() {
                 Total: {reservations.length}
               </span>
             </div>
-            {reservations.length === 0 ? (
+            {isLoading ? (
+              <div className="text-center py-5">
+                <p className="lead text-muted">Loading reservations...</p>
+              </div>
+            ) : reservations.length === 0 ? (
               <div className="text-center py-5">
                 <p className="lead text-muted">No reservations found</p>
               </div>
@@ -196,28 +188,38 @@ export default function AdminDashboard() {
                         <td>{r.user?.email || "N/A"}</td>
                         <td>
                           {editingId === r._id ? (
-                            <Form.Control
-                              type="date"
-                              size="sm"
-                              value={editData.date}
-                              onChange={(e) =>
-                                setEditData({ ...editData, date: e.target.value })
-                              }
-                            />
+                            <>
+                              <Form.Control
+                                type="date"
+                                size="sm"
+                                {...register("date")}
+                                isInvalid={!!errors.date}
+                              />
+                              {errors.date && (
+                                <Form.Control.Feedback type="invalid">
+                                  {errors.date.message}
+                                </Form.Control.Feedback>
+                              )}
+                            </>
                           ) : (
                             r.date
                           )}
                         </td>
                         <td>
                           {editingId === r._id ? (
-                            <Form.Control
-                              type="text"
-                              size="sm"
-                              value={editData.timeSlot}
-                              onChange={(e) =>
-                                setEditData({ ...editData, timeSlot: e.target.value })
-                              }
-                            />
+                            <>
+                              <Form.Control
+                                type="text"
+                                size="sm"
+                                {...register("timeSlot")}
+                                isInvalid={!!errors.timeSlot}
+                              />
+                              {errors.timeSlot && (
+                                <Form.Control.Feedback type="invalid">
+                                  {errors.timeSlot.message}
+                                </Form.Control.Feedback>
+                              )}
+                            </>
                           ) : (
                             r.timeSlot
                           )}
@@ -232,6 +234,7 @@ export default function AdminDashboard() {
                                 size="sm"
                                 onClick={() => saveUpdate(r._id)}
                                 className="action-btn-save"
+                                disabled={updateReservation.isPending}
                               >
                                 💾 Save
                               </Button>
@@ -248,8 +251,9 @@ export default function AdminDashboard() {
                             <Button
                               variant="danger"
                               size="sm"
-                              onClick={() => cancelReservation(r._id)}
+                              onClick={() => handleCancel(r._id)}
                               className="action-btn-cancel"
+                              disabled={cancelReservation.isPending}
                             >
                               🗑️ Cancel
                             </Button>

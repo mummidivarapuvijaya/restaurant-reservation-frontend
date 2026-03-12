@@ -1,16 +1,28 @@
-import { useEffect, useState } from "react";
-import api from "../api/axios";
 import Header from "../components/Header";
-import { toast } from "react-toastify";
 import { Container, Card, Form, Button, Table, Carousel } from "react-bootstrap";
 import "./UserDashboard.css";
+import { useMyReservations, useCreateReservation, useCancelReservation } from "../api/queries";
+import { reservationFormSchema, ReservationForm } from "../schemas";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 
 export default function UserDashboard() {
-  const [reservations, setReservations] = useState([]);
-  const [form, setForm] = useState({
-    date: "",
-    timeSlot: "",
-    guests: 1
+  const { data: reservations = [], isLoading } = useMyReservations();
+  const createReservation = useCreateReservation();
+  const cancelReservation = useCancelReservation();
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<ReservationForm>({
+    resolver: zodResolver(reservationFormSchema),
+    defaultValues: {
+      date: "",
+      timeSlot: "",
+      guests: 1,
+    },
   });
 
   const logout = () => {
@@ -18,49 +30,20 @@ export default function UserDashboard() {
     window.location.href = "/login";
   };
 
-  const loadReservations = async () => {
-    try {
-      const res = await api.get("/reservations/my");
-      setReservations(res.data);
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to load reservations");
-    }
+  const onSubmit = async (data: ReservationForm) => {
+    createReservation.mutate(data, {
+      onSuccess: () => {
+        reset({
+          date: "",
+          timeSlot: "",
+          guests: 1,
+        });
+      },
+    });
   };
 
-  useEffect(() => {
-    loadReservations();
-  }, []);
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const bookReservation = async (e) => {
-    e.preventDefault();
-    try {
-      await api.post("/reservations", form);
-      toast.success("Reservation booked successfully");
-
-      setForm({
-        date: "",
-        timeSlot: "",
-        guests: 1
-      });
-
-      loadReservations();
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Booking failed");
-    }
-  };
-
-  const cancelReservation = async (id) => {
-    try {
-      await api.delete(`/reservations/${id}`);
-      toast.info("Reservation cancelled");
-      loadReservations();
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to cancel reservation");
-    }
+  const handleCancel = (id: string) => {
+    cancelReservation.mutate(id);
   };
 
   return (
@@ -108,46 +91,62 @@ export default function UserDashboard() {
                 <h5 className="mb-0 text-white fw-bold">📅 Book a Reservation</h5>
               </Card.Header>
               <Card.Body>
-                <Form onSubmit={bookReservation}>
+                <Form onSubmit={handleSubmit(onSubmit)}>
                   <div className="row">
                     <div className="col-md-4 mb-3">
                       <Form.Label>Date</Form.Label>
                       <Form.Control
                         type="date"
-                        name="date"
-                        value={form.date}
-                        onChange={handleChange}
-                        required
+                        {...register("date")}
                         className="form-control-lg"
+                        isInvalid={!!errors.date}
                       />
+                      {errors.date && (
+                        <Form.Control.Feedback type="invalid">
+                          {errors.date.message}
+                        </Form.Control.Feedback>
+                      )}
                     </div>
                     <div className="col-md-4 mb-3">
                       <Form.Label>Time Slot</Form.Label>
                       <Form.Control
                         type="text"
-                        name="timeSlot"
+                        {...register("timeSlot")}
                         placeholder="7PM - 9PM"
-                        value={form.timeSlot}
-                        onChange={handleChange}
-                        required
                         className="form-control-lg"
+                        isInvalid={!!errors.timeSlot}
                       />
+                      {errors.timeSlot && (
+                        <Form.Control.Feedback type="invalid">
+                          {errors.timeSlot.message}
+                        </Form.Control.Feedback>
+                      )}
                     </div>
                     <div className="col-md-4 mb-3">
                       <Form.Label>Number of Guests</Form.Label>
                       <Form.Control
                         type="number"
-                        name="guests"
+                        {...register("guests", { valueAsNumber: true })}
                         min="1"
-                        value={form.guests}
-                        onChange={handleChange}
-                        required
+                        max="20"
                         className="form-control-lg"
+                        isInvalid={!!errors.guests}
                       />
+                      {errors.guests && (
+                        <Form.Control.Feedback type="invalid">
+                          {errors.guests.message}
+                        </Form.Control.Feedback>
+                      )}
                     </div>
                   </div>
-                  <Button type="submit" variant="primary" size="lg" className="book-btn">
-                    ✨ Book Reservation
+                  <Button 
+                    type="submit" 
+                    variant="primary" 
+                    size="lg" 
+                    className="book-btn"
+                    disabled={createReservation.isPending}
+                  >
+                    {createReservation.isPending ? "Booking..." : "✨ Book Reservation"}
                   </Button>
                 </Form>
               </Card.Body>
@@ -159,7 +158,11 @@ export default function UserDashboard() {
                 Total: {reservations.length}
               </span>
             </div>
-            {reservations.length === 0 ? (
+            {isLoading ? (
+              <div className="text-center py-5">
+                <p className="lead text-muted">Loading reservations...</p>
+              </div>
+            ) : reservations.length === 0 ? (
               <div className="text-center py-5">
                 <p className="lead text-muted">No reservations yet</p>
               </div>
@@ -186,8 +189,9 @@ export default function UserDashboard() {
                           <Button
                             variant="danger"
                             size="sm"
-                            onClick={() => cancelReservation(r._id)}
+                            onClick={() => handleCancel(r._id)}
                             className="action-btn-cancel"
+                            disabled={cancelReservation.isPending}
                           >
                             🗑️ Cancel
                           </Button>
